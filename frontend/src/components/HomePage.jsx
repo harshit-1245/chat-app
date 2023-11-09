@@ -29,10 +29,10 @@ const HomePage = () => {
   </TabList>
   <TabPanels>
     <TabPanel>
-      <p><Login/></p>
+      <Login/>
     </TabPanel>
     <TabPanel>
-      <p><Signup/></p>
+      <Signup/>
     </TabPanel>
   </TabPanels>
 </Tabs>
