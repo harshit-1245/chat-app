@@ -1,5 +1,6 @@
 // server.js
 const express = require('express');
+const cors=require('cors');
 const app=express();
 const connectDB=require('./config/db')
 const colors=require('colors')
@@ -14,10 +15,9 @@ app.use('/api/user',userRoute);
 app.use(express.urlencoded({ extended: true })); // Add this line to parse URL-encoded data
 app.use(notFound)
 app.use(errorHandler)
+app.use(cors());
 
-app.get('/',(req,res)=>{
-  res.send('Api is running')
-})
+
 
 
 app.listen(PORT, () => {

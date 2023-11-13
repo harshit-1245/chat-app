@@ -21,31 +21,74 @@ const [pic, setPic] = useState(null); // Initialize pic state to null
 const [picLoading, setPicLoading] = useState(false);
 
 
-useEffect(() => {
-  getApi();
-}, []);
-
-const getApi = () => {
-  axios.get('http://localhost:5000/api/user')
-    .then((res) => {
-      console.log(res.data); // Access the response data
-    })
-    .catch((error) => {
-      console.error(error);
-    });
-};
 
 
 
+const submitHandler = async () => {
 
-
-
-
-
-
-  const submitHandler = async () => {
-    
-  }
+   
+    if (!name || !email || !password || !confirmpassword) {
+      toast({
+        title: "Please Fill all the Feilds",
+        status: "warning",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
+      setPicLoading(false);
+      return;
+    }
+    if (password !== confirmpassword) {
+      toast({
+        title: "Passwords Do Not Match",
+        status: "warning",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
+      return;
+    }
+    console.log(name, email, password, pic);
+    try {
+      const config = {
+        headers: {
+          "Content-type": "application/json",
+        },
+      };
+      const { data } = await axios.post(
+        "/api/user/register",
+        {
+          name,
+          email,
+          password,
+          pic,
+        },
+        config
+      );
+      console.log(data);
+      toast({
+        title: "Registration Successful",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
+      localStorage.setItem("userInfo", JSON.stringify(data));
+      setPicLoading(false);
+      navigate("/chats");
+    } catch (error) {
+      toast({
+        title: "Error Occured!",
+        description: error.response.data.message,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom",
+      });
+      setPicLoading(false);
+    }
+  };
+  
 
   const postDetails = (pics) => {
     setPicLoading(true);

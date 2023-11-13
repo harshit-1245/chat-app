@@ -14,52 +14,58 @@ router.post('/register', async (req, res) => {
     // Check if the required fields are provided
     if (!name || !email || !password) {
         // If any of the required fields is missing, respond with a 400 Bad Request status and a message
-        res.status(400).json({ message: "Fill the required Area" });
+        return res.status(400).json({ message: "Fill the required fields" });
     }
 
     // Check if a user with the same email already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
         // If a user with the same email exists, respond with a 400 Bad Request status and a message
-        res.status(400).json({ message: "User already exists" });
+        return res.status(400).json({ message: "User already exists" });
     }
 
-    // Hash the provided password using bcrypt
-    const hashedPassword = await bcrypt.hash(password, 10);
+    try {
+        // Hash the provided password using bcrypt
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create a new user with the hashed password
-    const user = await User.create({
-        name,
-        email,
-        password: hashedPassword,
-        pic,
-    });
-
-    if (user) {
-        // Generate a JWT token for the newly created user
-        const token = jwt.sign({ userId: user._id }, secretKey, { expiresIn: '1h' });
-
-        // Respond with a 201 Created status and user data including the token
-        res.status(201).json({
-            _id: user.id,
-            name: user.name,
-            email: user.email,
-            pic: user.pic,
-            token,
+        // Create a new user with the hashed password
+        const user = await User.create({
+            name,
+            email,
+            password: hashedPassword,
+            pic,
         });
-    } else {
-        // If user creation fails, respond with a 500 Internal Server Error status and a message
-        res.status(500).json({ message: 'Failed to create the User' });
+
+        if (user) {
+            // Generate a JWT token for the newly created user
+            const token = jwt.sign({ userId: user._id }, secretKey, { expiresIn: '1h' });
+
+            // Respond with a 201 Created status and user data including the token
+            return res.status(201).json({
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                pic: user.pic,
+                token,
+            });
+        } else {
+            // If user creation fails, respond with a 500 Internal Server Error status and a message
+            return res.status(500).json({ message: 'Failed to create the user' });
+        }
+    } catch (error) {
+        // Handle any server errors and respond with an appropriate status and message
+        return res.status(500).json({ message: 'Server error' });
     }
 });
 router.get('/', async (req, res) => {
     try {
-      const user = await User.find();
-      res.send(user);
+        const users = await User.find();
+        res.status(200); // Sending the user data as JSON
     } catch (error) {
-      res.status(400).json({ message: "Bad request" });
+        res.status(404).json({ message: "Bad Request" });
     }
-  });
+});
+
   
 
 router.post('/login', async (req, res) => {
