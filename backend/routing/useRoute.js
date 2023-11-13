@@ -7,98 +7,43 @@ const bcrypt = require('bcryptjs');
 // Define your secret key
 const secretKey = 'your-secret-key'; // Replace with your actual secret key
 
-router.post('/register', async (req, res) => {
-    // Extract data from the request body
-    const { name, email, password, pic } = req.body;
 
-    // Check if the required fields are provided
-    if (!name || !email || !password) {
-        // If any of the required fields is missing, respond with a 400 Bad Request status and a message
-        return res.status(400).json({ message: "Fill the required fields" });
-    }
-
-    // Check if a user with the same email already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-        // If a user with the same email exists, respond with a 400 Bad Request status and a message
-        return res.status(400).json({ message: "User already exists" });
-    }
-
-    try {
-        // Hash the provided password using bcrypt
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        // Create a new user with the hashed password
-        const user = await User.create({
-            name,
-            email,
-            password: hashedPassword,
-            pic,
-        });
-
-        if (user) {
-            // Generate a JWT token for the newly created user
-            const token = jwt.sign({ userId: user._id }, secretKey, { expiresIn: '1h' });
-
-            // Respond with a 201 Created status and user data including the token
-            return res.status(201).json({
-                _id: user._id,
-                name: user.name,
-                email: user.email,
-                pic: user.pic,
-                token,
-            });
-        } else {
-            // If user creation fails, respond with a 500 Internal Server Error status and a message
-            return res.status(500).json({ message: 'Failed to create the user' });
-        }
-    } catch (error) {
-        // Handle any server errors and respond with an appropriate status and message
-        return res.status(500).json({ message: 'Server error' });
-    }
-});
 router.get('/', async (req, res) => {
     try {
         const users = await User.find();
-        res.status(200); // Sending the user data as JSON
+        res.status(200).json({message:"User Access"}); // Sending the user data as JSON
     } catch (error) {
         res.status(404).json({ message: "Bad Request" });
     }
 });
 
-  
 
-router.post('/login', async (req, res) => {
-    // Extract email and password from the request body
-    const { email, password } = req.body;
 
-    // Check if email and password are provided
-    if (!email || !password) {
-        // If either email or password is missing, respond with a 400 Bad Request status and a message
-        res.status(400).json("Email and Password Required");
+router.post('/register', async (req, res) => {
+    const { name, email, password, pic } = req.body;
+
+    if (!name || !email || !password) {
+        return res.status(400).json({ message: 'All fields are required' });
     }
 
-    // Find the user with the provided email
-    const user = await User.findOne({ email });
-
-    if (!user) {
-        // If no user is found with the provided email, respond with a 400 Bad Request status and a message
-        res.status(400).json({ message: "User not found" });
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+        return res.status(404).json({ message: "Email is already Registered" });
     }
 
-    // Compare the provided password with the stored hashed password using bcrypt
-    const passwordMatch = await bcrypt.compare(password, user.password);
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = new User({ name, email, password: hashedPassword });
 
-    if (!passwordMatch) {
-        // If the passwords don't match, respond with a 401 Unauthorized status and a message
-        return res.status(401).json({ message: 'Incorrect password' });
+    try {
+        await newUser.save();
+        const token = jwt.sign({ email: newUser.email }, secretKey, { expiresIn: '1h' });
+        res.status(201).json({ message: "Registration Successfully", token });
+    } catch (error) {
+        res.status(500).json({ message: 'Registration failed' });
     }
-
-    // Generate a JWT token for the authenticated user
-    const token = jwt.sign({ email: user.email }, secretKey, { expiresIn: '1h' });
-
-    // Respond with a 200 OK status and the token
-    res.status(200).json({ message: 'Login successful', token });
 });
+
+
+
 
 module.exports = router;
