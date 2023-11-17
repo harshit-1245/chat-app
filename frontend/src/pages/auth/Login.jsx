@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { Button, FormControl, FormLabel, Input, InputGroup, InputRightElement, Toast, VStack, useToast } from '@chakra-ui/react';
+import {useNavigate} from "react-router-dom";
 
 const Login = () => {
+  const navigate=useNavigate();
   const toast=useToast()
   const [show,setShow]=useState(false)
   const [user,setUser]=useState({
@@ -29,6 +31,8 @@ try {
       isClosable: true,
       position: "bottom",
     });
+    localStorage.setItem('userID',JSON.stringify(data));
+    navigate('/chat')
   }
 } catch (error) {
   console.error(error);
